@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Commande de Taxi</title>
+  <style>
+    body { font-family: Arial; padding: 20px; background: #f2f2f2; }
+    h1 { color: #333; }
+    form, .order { background: #fff; padding: 20px; margin-top: 20px; border-radius: 10px; }
+    input, textarea, button { width: 100%; padding: 10px; margin: 5px 0; border-radius: 5px; border: 1px solid #ccc; }
+    .admin-panel { margin-top: 40px; }
+    .order { border: 1px solid #ccc; }
+    .buttons { display: flex; gap: 10px; }
+    .accepted { color: green; }
+    .refused { color: red; }
+  </style>
+</head>
+<body>
+  <h1>Commander un Taxi</h1>
+  <form id="orderForm">
+    <input type="text" id="name" placeholder="Nom" required />
+    <input type="tel" id="phone" placeholder="Numéro de téléphone" required />
+    <input type="text" id="from" placeholder="Adresse de départ" required />
+    <input type="text" id="to" placeholder="Adresse d’arrivée" required />
+    <textarea id="comment" placeholder="Commentaire (optionnel)"></textarea>
+    <button type="submit">Envoyer la commande</button>
+  </form>
+  
+  <div id="confirmation" style="margin-top:20px;"></div>
+
+  <div class="admin-panel">
+    <h2>📋 Panneau de commandes (Admin)</h2>
+    <div id="ordersList"></div>
+  </div>
+
+  <script>
+    const orderForm = document.getElementById('orderForm');
+    const ordersList = document.getElementById('ordersList');
+    const confirmation = document.getElementById('confirmation');
+    const orders = [];
+
+    orderForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const order = {
+        id: Date.now(),
+        name: document.getElementById('name').value,
+        phone: document.getElementById('phone').value,
+        from: document.getElementById('from').value,
+        to: document.getElementById('to').value,
+        comment: document.getElementById('comment').value,
+        status: 'pending'
+      };
+      orders.push(order);
+      displayOrders();
+      confirmation.innerHTML = "<strong>Merci ! Votre commande a été envoyée. Veuillez patienter la confirmation.</strong>";
+      orderForm.reset();
+    });
+
+    function displayOrders() {
+      ordersList.innerHTML = '';
+      orders.forEach(order => {
+        const div = document.createElement('div');
+        div.classList.add('order');
+        div.innerHTML = `
+          <p><strong>${order.name}</strong> - ${order.phone}</p>
+          <p>De: ${order.from} → À: ${order.to}</p>
+          <p>Commentaire: ${order.comment}</p>
+          <div id="status-${order.id}">${renderStatus(order.status)}</div>
+        `;
+        if (order.status === 'pending') {
+          const buttonsDiv = document.createElement('div');
+          buttonsDiv.classList.add('buttons');
+          const acceptBtn = document.createElement('button');
+          acceptBtn.textContent = 'Accepter';
+          acceptBtn.onclick = () => updateStatus(order.id, 'accepted');
+          const refuseBtn = document.createElement('button');
+          refuseBtn.textContent = 'Refuser';
+          refuseBtn.onclick = () => updateStatus(order.id, 'refused');
+          buttonsDiv.appendChild(acceptBtn);
+          buttonsDiv.appendChild(refuseBtn);
+          div.appendChild(buttonsDiv);
+        }
+        ordersList.appendChild(div);
+      });
+    }
+
+    function updateStatus(id, newStatus) {
+      const order = orders.find(o => o.id === id);
+      if (order) {
+        order.status = newStatus;
+        const statusDiv = document.getElementById(`status-${id}`);
+        statusDiv.innerHTML = renderStatus(newStatus);
+      }
+    }
+
+    function renderStatus(status) {
+      if (status === 'accepted') return '<p class="accepted">✅ Commande acceptée</p>';
+      if (status === 'refused') return '<p class="refused">❌ Commande refusée</p>';
+      return '<p>⏳ En attente...</p>';
+    }
+  </script>
+</body>
+</html>
